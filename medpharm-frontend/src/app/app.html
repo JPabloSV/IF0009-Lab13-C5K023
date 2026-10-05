@@ -1,0 +1,18 @@
+<header class="navbar">
+  <a class="brand" routerLink="/recetas"><span>✚</span> MedPharm Express</a>
+
+  @if (auth.sesion(); as s) {
+    <nav class="nav-links">
+      <a routerLink="/recetas" routerLinkActive="active">Recetas</a>
+      <a routerLink="/nueva-receta" routerLinkActive="active">Nueva receta</a>
+    </nav>
+    <div class="user">
+      <span class="user-name">{{ s.username }} <small>{{ s.rol }}</small></span>
+      <button class="btn btn-secondary btn-sm" (click)="auth.logout()">Salir</button>
+    </div>
+  }
+</header>
+
+<main>
+  <router-outlet />
+</main>
