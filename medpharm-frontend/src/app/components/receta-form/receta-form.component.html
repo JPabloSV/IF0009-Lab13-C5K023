@@ -1,0 +1,109 @@
+<div class="container narrow">
+  <div class="page-header">
+    <div>
+      <h1>Nueva receta</h1>
+      <p>Complete los datos del paciente y los medicamentos indicados.</p>
+    </div>
+    <a class="btn btn-secondary" routerLink="/recetas">← Volver</a>
+  </div>
+
+  @if (error()) {
+    <div class="alert alert-error">
+      {{ error() }}
+      @if (erroresServidor().length) {
+        <ul class="server-errors">
+          @for (e of erroresServidor(); track e) { <li>{{ e }}</li> }
+        </ul>
+      }
+    </div>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+    <!-- Paciente -->
+    <section class="card">
+      <h2>Paciente</h2>
+      <div class="field">
+        <label for="paciente">Nombre completo</label>
+        <input id="paciente" type="text" formControlName="pacienteNombre"
+               placeholder="Ej. Ana López Mora" [class.invalid]="invalido(pacienteNombre)" />
+        @if (invalido(pacienteNombre)) {
+          @if (pacienteNombre.hasError('required')) {
+            <span class="error-text">El nombre del paciente es requerido.</span>
+          } @else if (pacienteNombre.hasError('minlength')) {
+            <span class="error-text">Debe tener al menos 5 caracteres.</span>
+          } @else if (pacienteNombre.hasError('maxlength')) {
+            <span class="error-text">No puede superar 120 caracteres.</span>
+          }
+        }
+      </div>
+    </section>
+
+    <!-- Medicamentos (FormArray) -->
+    <section class="card">
+      <div class="section-header">
+        <h2>Medicamentos <span class="count">{{ detalles.length }}</span></h2>
+        <button type="button" class="btn btn-secondary btn-sm" (click)="agregarDetalle()">+ Agregar medicamento</button>
+      </div>
+
+      <div formArrayName="detalles" class="detalles">
+        @for (grupo of detalles.controls; track grupo; let i = $index) {
+          <div class="detalle" [formGroupName]="i">
+            <div class="detalle-header">
+              <span class="detalle-num">#{{ i + 1 }}</span>
+              <button type="button" class="btn btn-danger btn-sm" (click)="quitarDetalle(i)"
+                      [disabled]="detalles.length === 1">Quitar</button>
+            </div>
+
+            <div class="detalle-grid">
+              <div class="field">
+                <label [for]="'med-' + i">Medicamento</label>
+                <select [id]="'med-' + i" formControlName="medicamentoId"
+                        [class.invalid]="invalido(grupo.controls.medicamentoId)">
+                  <option [ngValue]="null" disabled>Seleccione…</option>
+                  @for (m of medicamentos(); track m.id) {
+                    <option [ngValue]="m.id">{{ m.codigo }} · {{ m.nombre }}</option>
+                  }
+                </select>
+                @if (invalido(grupo.controls.medicamentoId)) {
+                  <span class="error-text">Seleccione un medicamento.</span>
+                } @else if (stockDe(grupo.controls.medicamentoId.value) !== null) {
+                  <span class="hint">Stock disponible: {{ stockDe(grupo.controls.medicamentoId.value) }}</span>
+                }
+              </div>
+
+              <div class="field">
+                <label [for]="'cant-' + i">Cantidad</label>
+                <input [id]="'cant-' + i" type="number" min="1" step="1" formControlName="cantidad"
+                       [class.invalid]="invalido(grupo.controls.cantidad)" />
+                @if (invalido(grupo.controls.cantidad)) {
+                  @if (grupo.controls.cantidad.hasError('required')) {
+                    <span class="error-text">La cantidad es requerida.</span>
+                  } @else if (grupo.controls.cantidad.hasError('positivo')) {
+                    <span class="error-text">Debe ser un número entero mayor que 0.</span>
+                  }
+                }
+              </div>
+
+              <div class="field field-wide">
+                <label [for]="'dosis-' + i">Dosis indicada</label>
+                <input [id]="'dosis-' + i" type="text" formControlName="dosisIndicada"
+                       placeholder="Ej. 1 tableta cada 8 horas por 5 días"
+                       [class.invalid]="invalido(grupo.controls.dosisIndicada)" />
+                @if (invalido(grupo.controls.dosisIndicada)) {
+                  <span class="error-text">La dosis indicada es requerida.</span>
+                }
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+
+    <div class="form-actions">
+      <a class="btn btn-secondary" routerLink="/recetas">Cancelar</a>
+      <button type="submit" class="btn btn-primary" [disabled]="enviando()">
+        {{ enviando() ? 'Guardando…' : 'Emitir receta' }}
+      </button>
+    </div>
+  </form>
+</div>
