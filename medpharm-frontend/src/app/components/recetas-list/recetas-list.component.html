@@ -1,0 +1,87 @@
+<div class="container">
+  <div class="page-header">
+    <div>
+      <h1>Recetas médicas</h1>
+      <p>Consulte y actualice el estado de despacho de las recetas.</p>
+    </div>
+    <div class="actions">
+      <button class="btn btn-secondary" (click)="cargar()" [disabled]="cargando()">↻ Actualizar</button>
+      <a class="btn btn-primary" routerLink="/nueva-receta">+ Nueva receta</a>
+    </div>
+  </div>
+
+  <!-- Filtro por estado -->
+  <div class="tabs" role="tablist">
+    @for (f of filtros; track f) {
+      <button role="tab" class="tab" [class.active]="filtro() === f"
+              [attr.aria-selected]="filtro() === f" (click)="filtro.set(f)">
+        {{ f }}
+        <span class="count">{{ contadores()[f] }}</span>
+      </button>
+    }
+  </div>
+
+  @if (mensaje()) {
+    <div class="alert alert-success">{{ mensaje() }}</div>
+  }
+  @if (error()) {
+    <div class="alert alert-error">{{ error() }}</div>
+  }
+
+  <div class="card table-card">
+    @if (cargando()) {
+      <p class="empty">Cargando recetas…</p>
+    } @else {
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Paciente</th>
+              <th>Medicamentos</th>
+              <th>Médico</th>
+              <th>Emisión</th>
+              <th>Estado</th>
+              <th class="col-acciones">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of recetasFiltradas(); track r.id) {
+              <tr>
+                <td class="codigo">{{ r.codigoReceta }}</td>
+                <td>{{ r.pacienteNombre }}</td>
+                <td>
+                  <ul class="meds">
+                    @for (d of r.detalles; track d.id) {
+                      <li><strong>{{ d.cantidad }}×</strong> {{ d.medicamentoNombre }}
+                        <small>{{ d.dosisIndicada }}</small></li>
+                    }
+                  </ul>
+                </td>
+                <td>{{ r.medicoNombre }}</td>
+                <td class="fecha">{{ r.fechaEmision | date: 'dd/MM/yyyy HH:mm' }}</td>
+                <td><span [class]="claseBadge(r.estado)">{{ r.estado }}</span></td>
+                <td class="col-acciones">
+                  @if (r.estado === 'PENDIENTE') {
+                    <div class="row-actions">
+                      <button class="btn btn-success btn-sm" [disabled]="procesandoId() === r.id"
+                              (click)="cambiarEstado(r, 'DESPACHADA')">Despachar</button>
+                      <button class="btn btn-danger btn-sm" [disabled]="procesandoId() === r.id"
+                              (click)="cambiarEstado(r, 'CANCELADA')">Cancelar</button>
+                    </div>
+                  } @else {
+                    <span class="muted">—</span>
+                  }
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="7" class="empty">No hay recetas con estado {{ filtro() }}.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>
